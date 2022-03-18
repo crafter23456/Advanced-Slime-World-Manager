@@ -30,6 +30,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.World;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -41,7 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.grinderwolf.swm.api.world.properties.SlimeProperties.*;
 
-public class SWMPlugin extends JavaPlugin implements SlimePlugin {
+public class SWMPlugin extends JavaPlugin implements SlimePlugin, Listener {
 
     @Getter
     private SlimeNMS nms;
@@ -138,6 +141,8 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin {
         loadedWorlds.values().stream()
                 .filter(slimeWorld -> Objects.isNull(Bukkit.getWorld(slimeWorld.getName())))
                 .forEach(this::generateWorld);
+
+        this.getServer().getPluginManager().registerEvents(this, this);
 
         //loadedWorlds.clear // - Commented out because not sure why this would be cleared. Needs checking
     }
@@ -278,6 +283,7 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin {
 
         Logging.info("World " + worldName + " loaded in " + (System.currentTimeMillis() - start) + "ms.");
 
+        registerWorld(world);
         return world;
     }
 
@@ -310,6 +316,7 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin {
 
         Logging.info("World " + worldName + " created in " + (System.currentTimeMillis() - start) + "ms.");
 
+        registerWorld(world);
         return world;
     }
 
@@ -326,6 +333,24 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin {
         propertyMap.setValue(ENVIRONMENT, properties.getEnvironment());
 
         return propertyMap;
+    }
+
+    /**
+     * Utility method to register a <b>loaded</b> {@link SlimeWorld} with the internal map (for {@link #getWorld} calls)
+     *
+     * @param world the world to register
+     */
+    private void registerWorld(SlimeWorld world) {
+        this.loadedWorlds.put(world.getName(), world);
+    }
+
+
+    /**
+     * Ensure worlds are removed from the loadedWorlds map when {@link Bukkit#unloadWorld} is called.
+     */
+    @EventHandler
+    public void onBukkitWorldUnload(WorldUnloadEvent worldUnloadEvent) {
+        loadedWorlds.remove(worldUnloadEvent.getWorld().getName());
     }
 
     @Override

@@ -281,7 +281,7 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin {
         return world;
     }
 
-    public SlimeWorld getWorld(SlimeLoader loader, String worldName) {
+    public SlimeWorld getWorld(String worldName) {
         return loadedWorlds.get(worldName);
     }
 
@@ -451,16 +451,16 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin {
     }
 
     @Override
-    public CompletableFuture<Optional<SlimeWorld>> asyncGetWorld(SlimeLoader slimeLoader, String worldName) {
+    public CompletableFuture<Optional<SlimeWorld>> asyncGetWorld(String worldName) {
         return CompletableFuture.supplyAsync(() -> {
-            var preEvent = new AsyncPreGetWorldEvent(slimeLoader, worldName);
+            var preEvent = new AsyncPreGetWorldEvent(worldName);
             Bukkit.getPluginManager().callEvent(preEvent);
 
-            if(preEvent.isCancelled()) {
+            if (preEvent.isCancelled()) {
                 return Optional.empty();
             }
 
-            var world = getWorld(preEvent.getSlimeLoader(), preEvent.getWorldName());
+            var world = getWorld(preEvent.getWorldName());
             var postEvent = new AsyncPostGetWorldEvent(world);
             Bukkit.getPluginManager().callEvent(postEvent);
             return Optional.ofNullable(postEvent.getSlimeWorld());

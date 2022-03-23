@@ -39,13 +39,15 @@ public class CraftSlimeWorld implements SlimeWorld {
 
     private final boolean locked;
 
+    private final Object chunkAccessLock = new Object();
+
     @Override
     public SlimeChunk getChunk(int x, int z) {
-//        synchronized (chunks) {
+        synchronized (chunkAccessLock) {
             Long index = (((long) z) * Integer.MAX_VALUE + ((long) x));
 
             return chunks.get(index);
-//        }
+       }
     }
 
     public void updateChunk(SlimeChunk chunk) {
@@ -54,9 +56,9 @@ public class CraftSlimeWorld implements SlimeWorld {
                     + chunk.getWorldName() + "', not to '" + getName() + "'!");
         }
 
-//        synchronized (chunks) {
+        synchronized (chunkAccessLock) {
             chunks.put(((long) chunk.getZ()) * Integer.MAX_VALUE + ((long) chunk.getX()), chunk);
-//        }
+        }
     }
 
     @Override
@@ -90,10 +92,10 @@ public class CraftSlimeWorld implements SlimeWorld {
 
         CraftSlimeWorld world;
 
-//        synchronized (chunks) {
+        synchronized (chunkAccessLock) {
             world = new CraftSlimeWorld(loader == null ? this.loader : loader, worldName, new HashMap<>(chunks), extraData.clone(),
                     new ArrayList<>(worldMaps), version, propertyMap, loader == null, lock);
-//        }
+        }
 
         if (loader != null) {
             loader.saveWorld(worldName, world.serialize(), lock);
@@ -120,7 +122,7 @@ public class CraftSlimeWorld implements SlimeWorld {
     public byte[] serialize() {
         List<SlimeChunk> sortedChunks;
 
-        synchronized (chunks) {
+        synchronized (chunkAccessLock) {
             sortedChunks = new ArrayList<>(chunks.values());
         }
 
@@ -305,10 +307,7 @@ public class CraftSlimeWorld implements SlimeWorld {
                     }
 
                     // Block Data
-                    if (worldVersion <= 0x04) {
-                        outStream.write(section.getBlocks());
-                        outStream.write(section.getData().getBacking());
-                    } else {
+                    if (worldVersion >= 0x04) {
                         // Palette
                         List<CompoundTag> palette = section.getPalette().getValue();
                         outStream.writeInt(palette.size());
@@ -328,6 +327,9 @@ public class CraftSlimeWorld implements SlimeWorld {
                         for (long value : section.getBlockStates()) {
                             outStream.writeLong(value);
                         }
+                    } else {
+                        outStream.write(section.getBlocks());
+                        outStream.write(section.getData().getBacking());
                     }
 
                     // Sky Light

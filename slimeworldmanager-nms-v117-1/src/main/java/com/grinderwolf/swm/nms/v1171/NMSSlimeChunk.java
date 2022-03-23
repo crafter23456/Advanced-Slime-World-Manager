@@ -47,7 +47,7 @@ public class NMSSlimeChunk implements SlimeChunk {
         for (int sectionId = 0; sectionId < chunk.getSections().length; sectionId++) {
             LevelChunkSection section = chunk.getSections()[sectionId];
 
-            if (section != null && section.isEmpty()) {
+            if (section != null && !section.isEmpty()) {
                 // Block Light Nibble Array
                 NibbleArray blockLightArray = Converter.convertArray(lightEngine.getLayerListener(LightLayer.BLOCK).getDataLayerData(SectionPos.of(chunk.getPos(), sectionId)));
 

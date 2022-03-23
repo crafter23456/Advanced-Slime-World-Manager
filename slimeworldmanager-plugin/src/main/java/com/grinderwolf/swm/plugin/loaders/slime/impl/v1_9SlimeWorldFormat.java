@@ -380,19 +380,8 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
                 ListTag<CompoundTag> paletteTag = null;
                 long[] blockStatesArray = null;
 
-                byte[] rawBlockStates = null;
-                byte[] rawBiomes = null;
-
-                if (worldVersion < 0x04) {
-                    blockArray = new byte[4096];
-                    dataStream.read(blockArray);
-
-                    // Block Data Nibble Array
-                    byte[] dataByteArray = new byte[2048];
-                    dataStream.read(dataByteArray);
-                    dataArray = new NibbleArray((dataByteArray));
-                } else if (worldVersion < 0x08) {
-                    // Post 1.13 block format
+                // Post 1.13 block format
+                if (worldVersion >= 0x04) {
                     // Palette
                     int paletteLength = dataStream.readInt();
                     List<CompoundTag> paletteList = new ArrayList<>(paletteLength);
@@ -414,11 +403,15 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
                     for (int index = 0; index < blockStatesArrayLength; index++) {
                         blockStatesArray[index] = dataStream.readLong();
                     }
+
                 } else {
-                    rawBlockStates = new byte[dataStream.readInt()];
-                    dataStream.read(rawBlockStates);
-                    rawBiomes = new byte[dataStream.readInt()];
-                    dataStream.read(rawBiomes);
+                    blockArray = new byte[4096];
+                    dataStream.read(blockArray);
+
+                    // Block Data Nibble Array
+                    byte[] dataByteArray = new byte[2048];
+                    dataStream.read(dataByteArray);
+                    dataArray = new NibbleArray((dataByteArray));
                 }
 
                 // Sky Light Nibble Array
@@ -442,6 +435,7 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
             }
         }
 
+        System.out.println(Arrays.toString(chunkSectionArray));
         return new ChunkSectionData(chunkSectionArray, 0, 16);
     }
 

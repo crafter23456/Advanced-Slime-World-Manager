@@ -378,4 +378,23 @@ public class CustomWorldServer extends ServerLevel {
         }
     }
 
+    @Override
+    public void unload(LevelChunk chunk) {
+        Iterator<BlockEntity> tileEntities = chunk.getBlockEntities().values().iterator();
+        do {
+            BlockEntity tileentity;
+            do {
+                if (!tileEntities.hasNext()) {
+//                    chunk.C();
+                    return;
+                }
+                tileentity = tileEntities.next();
+            } while (!(tileentity instanceof Container));
+
+            for (HumanEntity h : Lists.newArrayList(((Container) tileentity).getViewers())) {
+                ((CraftHumanEntity) h).getHandle().closeUnloadedInventory(InventoryCloseEvent.Reason.UNLOADED);
+            }
+            ((Container) tileentity).getViewers().clear();
+        } while (true);
+    }
 }

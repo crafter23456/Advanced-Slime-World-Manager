@@ -4,6 +4,7 @@ import ca.spottedleaf.starlight.common.light.SWMRNibbleArray;
 import com.flowpowered.nbt.CompoundMap;
 import com.flowpowered.nbt.CompoundTag;
 import com.flowpowered.nbt.LongArrayTag;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.grinderwolf.swm.api.exceptions.UnknownWorldException;
 import com.grinderwolf.swm.api.utils.NibbleArray;
@@ -27,6 +28,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.util.ProgressListener;
 import net.minecraft.util.Unit;
+import net.minecraft.world.Container;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.ChunkPos;
@@ -47,14 +49,14 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.ticks.LevelChunkTicks;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v1_18_R2.entity.CraftHumanEntity;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -342,4 +344,23 @@ public class CustomWorldServer extends ServerLevel {
         }
     }
 
+    @Override
+    public void unload(LevelChunk chunk) {
+        Iterator<BlockEntity> tileEntities = chunk.getBlockEntities().values().iterator();
+        do {
+            BlockEntity tileentity;
+            do {
+                if (!tileEntities.hasNext()) {
+//                    chunk.C();
+                    return;
+                }
+                tileentity = tileEntities.next();
+            } while (!(tileentity instanceof Container));
+
+            for (HumanEntity h : Lists.newArrayList(((Container) tileentity).getViewers())) {
+                ((CraftHumanEntity) h).getHandle().closeUnloadedInventory(InventoryCloseEvent.Reason.UNLOADED);
+            }
+            ((Container) tileentity).getViewers().clear();
+        } while (true);
+    }
 }

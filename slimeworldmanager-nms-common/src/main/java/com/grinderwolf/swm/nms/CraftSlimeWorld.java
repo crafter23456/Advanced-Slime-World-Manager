@@ -41,11 +41,11 @@ public class CraftSlimeWorld implements SlimeWorld {
 
     @Override
     public SlimeChunk getChunk(int x, int z) {
-        synchronized (chunks) {
+//        synchronized (chunks) {
             Long index = (((long) z) * Integer.MAX_VALUE + ((long) x));
 
             return chunks.get(index);
-        }
+//        }
     }
 
     public void updateChunk(SlimeChunk chunk) {
@@ -54,9 +54,9 @@ public class CraftSlimeWorld implements SlimeWorld {
                     + chunk.getWorldName() + "', not to '" + getName() + "'!");
         }
 
-        synchronized (chunks) {
+//        synchronized (chunks) {
             chunks.put(((long) chunk.getZ()) * Integer.MAX_VALUE + ((long) chunk.getX()), chunk);
-        }
+//        }
     }
 
     @Override
@@ -90,10 +90,10 @@ public class CraftSlimeWorld implements SlimeWorld {
 
         CraftSlimeWorld world;
 
-        synchronized (chunks) {
+//        synchronized (chunks) {
             world = new CraftSlimeWorld(loader == null ? this.loader : loader, worldName, new HashMap<>(chunks), extraData.clone(),
                     new ArrayList<>(worldMaps), version, propertyMap, loader == null, lock);
-        }
+//        }
 
         if (loader != null) {
             loader.saveWorld(worldName, world.serialize(), lock);
@@ -118,13 +118,20 @@ public class CraftSlimeWorld implements SlimeWorld {
     // World Serialization methods
 
     public byte[] serialize() {
+        System.out.println("SERIALIZE");
         List<SlimeChunk> sortedChunks;
 
-        synchronized (chunks) {
+//        synchronized (chunks) {
             sortedChunks = new ArrayList<>(chunks.values());
-        }
+//        }
 
-        sortedChunks.sort(Comparator.comparingLong(chunk -> (long) chunk.getZ() * Integer.MAX_VALUE + (long) chunk.getX()));
+        sortedChunks.sort(Comparator.comparingLong(chunk -> {
+            if(chunk != null) {
+                return (long) chunk.getZ() * Integer.MAX_VALUE + (long) chunk.getX();
+            }else{
+                return 0;
+            }
+        }));
         sortedChunks.removeIf(Objects::isNull); // Remove empty chunks to save space
 
         // Store world properties
@@ -228,10 +235,12 @@ public class CraftSlimeWorld implements SlimeWorld {
             outStream.writeInt(compressedMapArray.length);
             outStream.writeInt(mapArray.length);
             outStream.write(compressedMapArray);
+            System.out.println("BOTTOM SERIAL TRY");
         } catch (IOException ex) { // Ignore
             ex.printStackTrace();
         }
 
+        System.out.println("VERY BOTTOM SERIAL");
         return outByteStream.toByteArray();
     }
 

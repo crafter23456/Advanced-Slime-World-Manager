@@ -47,6 +47,8 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin {
 
     private final List<SlimeWorld> worlds = new ArrayList<>();
 
+    private v1182SlimeNMS v1182SlimeNMS;
+
     private static boolean isPaperMC = false;
 
     private static boolean checkIsPaper() {
@@ -179,7 +181,8 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin {
             case 2865:
                 return new v1181SlimeNMS(isPaperMC);
             case 2975:
-                return new v1182SlimeNMS(isPaperMC);
+                v1182SlimeNMS = new v1182SlimeNMS(isPaperMC, this);
+                return v1182SlimeNMS;
             default:
                 throw new InvalidVersionException("" + dataVersion);
 

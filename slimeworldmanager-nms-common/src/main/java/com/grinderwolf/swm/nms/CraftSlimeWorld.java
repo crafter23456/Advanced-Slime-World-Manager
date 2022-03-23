@@ -118,12 +118,11 @@ public class CraftSlimeWorld implements SlimeWorld {
     // World Serialization methods
 
     public byte[] serialize() {
-        System.out.println("SERIALIZE");
         List<SlimeChunk> sortedChunks;
 
-//        synchronized (chunks) {
+        synchronized (chunks) {
             sortedChunks = new ArrayList<>(chunks.values());
-//        }
+        }
 
         sortedChunks.sort(Comparator.comparingLong(chunk -> {
             if(chunk != null) {
@@ -235,12 +234,10 @@ public class CraftSlimeWorld implements SlimeWorld {
             outStream.writeInt(compressedMapArray.length);
             outStream.writeInt(mapArray.length);
             outStream.write(compressedMapArray);
-            System.out.println("BOTTOM SERIAL TRY");
         } catch (IOException ex) { // Ignore
             ex.printStackTrace();
         }
 
-        System.out.println("VERY BOTTOM SERIAL");
         return outByteStream.toByteArray();
     }
 

@@ -6,7 +6,7 @@ import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.utils.SlimeFormat;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import com.grinderwolf.swm.nms.CraftSlimeWorld;
-import com.grinderwolf.swm.plugin.loaders.slime.impl.v1_9SlimeWorldFormat;
+import com.grinderwolf.swm.plugin.loaders.slime.impl.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;

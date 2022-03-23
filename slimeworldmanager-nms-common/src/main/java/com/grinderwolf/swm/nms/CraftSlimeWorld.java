@@ -276,7 +276,7 @@ public class CraftSlimeWorld implements SlimeWorld {
 
             // Chunk sections
             SlimeChunkSection[] sections = chunk.getSections();
-            if (worldVersion < 0x07) {
+            if (worldVersion <= 0x07) {
                 BitSet sectionBitmask = new BitSet(16);
 
                 for (int i = 0; i < sections.length; i++) {
@@ -299,10 +299,10 @@ public class CraftSlimeWorld implements SlimeWorld {
                     }
 
                     // Block Data
-                    if (worldVersion < 0x04) {
+                    if (worldVersion <= 0x04) {
                         outStream.write(section.getBlocks());
                         outStream.write(section.getData().getBacking());
-                    } else if (worldVersion < 0x08) {
+                    } else {
                         // Palette
                         List<CompoundTag> palette = section.getPalette().getValue();
                         outStream.writeInt(palette.size());
@@ -322,14 +322,6 @@ public class CraftSlimeWorld implements SlimeWorld {
                         for (long value : section.getBlockStates()) {
                             outStream.writeLong(value);
                         }
-                    } else {
-                        byte[] serializedBlockStates = serializeCompoundTag(section.getBlockStatesTag());
-                        outStream.writeInt(serializedBlockStates.length);
-                        outStream.write(serializedBlockStates);
-
-                        byte[] serializedBiomes = serializeCompoundTag(section.getBiomeTag());
-                        outStream.writeInt(serializedBiomes.length);
-                        outStream.write(serializedBiomes);
                     }
 
                     // Sky Light

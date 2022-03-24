@@ -435,7 +435,6 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
             }
         }
 
-        System.out.println(Arrays.toString(chunkSectionArray));
         return new ChunkSectionData(chunkSectionArray, 0, 16);
     }
 

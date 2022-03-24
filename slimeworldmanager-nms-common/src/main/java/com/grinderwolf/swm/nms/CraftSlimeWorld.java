@@ -8,7 +8,7 @@ import com.grinderwolf.swm.api.exceptions.WorldAlreadyExistsException;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.utils.SlimeFormat;
 import com.grinderwolf.swm.api.world.*;
-import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
+import com.grinderwolf.swm.api.world.properties.*;
 import lombok.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
@@ -134,6 +134,28 @@ public class CraftSlimeWorld implements SlimeWorld {
             }
         }));
         sortedChunks.removeIf(Objects::isNull); // Remove empty chunks to save space
+        if (propertyMap.getValue(SHOULD_LIMIT_SAVE)) {
+            int minX = propertyMap.getValue(SAVE_MIN_X);
+            int maxX = propertyMap.getValue(SAVE_MAX_X);
+
+            int minZ = propertyMap.getValue(SAVE_MIN_Z);
+            int maxZ = propertyMap.getValue(SAVE_MAX_Z);
+
+            sortedChunks.removeIf((chunk) -> {
+                int chunkX = chunk.getX();
+                int chunkZ = chunk.getZ();
+
+                if (chunkX < minX || chunkX > maxX) {
+                    return true;
+                }
+
+                if (chunkZ < minZ || chunkZ > maxZ) {
+                    return true;
+                }
+
+                return false;
+            });
+        }
 
         // Store world properties
         if(!extraData.getValue().containsKey("properties")) {

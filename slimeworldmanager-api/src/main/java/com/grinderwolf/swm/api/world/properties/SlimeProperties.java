@@ -75,17 +75,17 @@ public class SlimeProperties {
     public static final SlimeProperty<String> DEFAULT_BIOME = new SlimePropertyString("defaultBiome", "minecraft:plains");
 
     @ApiStatus.Experimental
-    public static final SlimeProperty<Boolean> SHOULD_LIMIT_SAVE = new SlimePropertyBoolean("hasSaveBounds", true);
+    public static final SlimeProperty<Boolean> SHOULD_LIMIT_SAVE = new SlimePropertyBoolean("hasSaveBounds", false);
 
     @ApiStatus.Experimental
-    public static final SlimeProperty<Integer> SAVE_MIN_X = new SlimePropertyInt("saveMinX", -3);
+    public static final SlimeProperty<Integer> SAVE_MIN_X = new SlimePropertyInt("saveMinX", 0);
     @ApiStatus.Experimental
-    public static final SlimeProperty<Integer> SAVE_MIN_Z = new SlimePropertyInt("saveMinZ", -3);
+    public static final SlimeProperty<Integer> SAVE_MIN_Z = new SlimePropertyInt("saveMinZ", 0);
 
     @ApiStatus.Experimental
-    public static final SlimeProperty<Integer> SAVE_MAX_X = new SlimePropertyInt("saveMaxX", 3);
+    public static final SlimeProperty<Integer> SAVE_MAX_X = new SlimePropertyInt("saveMaxX", 0);
     @ApiStatus.Experimental
-    public static final SlimeProperty<Integer> SAVE_MAX_Z = new SlimePropertyInt("saveMaxZ", 3);
+    public static final SlimeProperty<Integer> SAVE_MAX_Z = new SlimePropertyInt("saveMaxZ", 0);
 
 
 }

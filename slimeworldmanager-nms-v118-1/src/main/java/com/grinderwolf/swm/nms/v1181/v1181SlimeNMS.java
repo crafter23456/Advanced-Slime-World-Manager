@@ -1,10 +1,13 @@
 package com.grinderwolf.swm.nms.v1181;
 
 import com.flowpowered.nbt.CompoundTag;
+import com.grinderwolf.swm.api.loaders.*;
 import com.grinderwolf.swm.api.world.*;
 import com.grinderwolf.swm.api.world.properties.*;
 import com.grinderwolf.swm.nms.*;
+import com.grinderwolf.swm.nms.world.*;
 import com.mojang.serialization.*;
+import it.unimi.dsi.fastutil.longs.*;
 import lombok.*;
 import net.minecraft.*;
 import net.minecraft.core.Registry;
@@ -178,6 +181,11 @@ public class v1181SlimeNMS implements SlimeNMS {
         return worldServer.getSlimeWorld();
     }
 
+    @Override
+    public SlimeLoadedWorld createSlimeWorld(SlimeLoader loader, String worldName, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraCompound, List<CompoundTag> mapList, byte worldVersion, SlimePropertyMap worldPropertyMap, boolean readOnly, boolean lock) {
+        return new v1181SlimeWorld(this, worldVersion, loader, worldName, chunks, extraCompound, worldPropertyMap, readOnly, lock);
+    }
+
     public void registerWorld(CustomWorldServer server) {
         MinecraftServer mcServer = MinecraftServer.getServer();
         mcServer.initWorld(server, server.serverLevelData, mcServer.getWorldData(), server.serverLevelData.worldGenSettings());
@@ -186,6 +194,8 @@ public class v1181SlimeNMS implements SlimeNMS {
     }
 
     private CustomWorldServer createCustomWorld(SlimeWorld world, @Nullable ResourceKey<Level> dimensionOverride) {
+        v1181SlimeWorld nmsWorld = (v1181SlimeWorld) world;
+
         String worldName = world.getName();
 
         PrimaryLevelData worldDataServer = createWorldData(world);
@@ -243,8 +253,9 @@ public class v1181SlimeNMS implements SlimeNMS {
         CustomWorldServer level;
 
         try {
-            level = new CustomWorldServer((CraftSlimeWorld) world, worldDataServer,
+            level = new CustomWorldServer(nmsWorld, worldDataServer,
                     worldKey, dimension, type, chunkGenerator, environment);
+            nmsWorld.setHandle(level);
         } catch (IOException ex) {
             throw new RuntimeException(ex); // TODO do something better with this?
         }

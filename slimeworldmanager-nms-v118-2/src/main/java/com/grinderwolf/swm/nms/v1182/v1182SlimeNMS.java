@@ -1,10 +1,13 @@
 package com.grinderwolf.swm.nms.v1182;
 
 import com.flowpowered.nbt.CompoundTag;
+import com.grinderwolf.swm.api.loaders.*;
 import com.grinderwolf.swm.api.world.*;
 import com.grinderwolf.swm.api.world.properties.*;
 import com.grinderwolf.swm.nms.*;
+import com.grinderwolf.swm.nms.world.*;
 import com.mojang.serialization.*;
+import it.unimi.dsi.fastutil.longs.*;
 import lombok.*;
 import net.minecraft.*;
 import net.minecraft.core.Registry;
@@ -179,6 +182,7 @@ public class v1182SlimeNMS implements SlimeNMS {
     }
 
     private CustomWorldServer createCustomWorld(SlimeWorld world, @Nullable ResourceKey<Level> dimensionOverride) {
+        v1182SlimeWorld nmsWorld = (v1182SlimeWorld) world;
         String worldName = world.getName();
 
         PrimaryLevelData worldDataServer = createWorldData(world);
@@ -236,8 +240,9 @@ public class v1182SlimeNMS implements SlimeNMS {
         CustomWorldServer level;
 
         try {
-            level = new CustomWorldServer((CraftSlimeWorld) world, worldDataServer,
+            level = new CustomWorldServer(nmsWorld, worldDataServer,
                     worldKey, dimension, type, chunkGenerator, environment);
+            nmsWorld.setHandle(level);
         } catch (IOException ex) {
             throw new RuntimeException(ex); // TODO do something better with this?
         }
@@ -304,5 +309,10 @@ public class v1182SlimeNMS implements SlimeNMS {
         worldDataServer.setInitialized(true);
 
         return worldDataServer;
+    }
+
+    @Override
+    public SlimeLoadedWorld createSlimeWorld(SlimeLoader loader, String worldName, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraCompound, List<CompoundTag> mapList, byte worldVersion, SlimePropertyMap worldPropertyMap, boolean readOnly, boolean lock) {
+        return new v1182SlimeWorld(this, worldVersion, loader, worldName, chunks, extraCompound, worldPropertyMap, readOnly, lock);
     }
 }

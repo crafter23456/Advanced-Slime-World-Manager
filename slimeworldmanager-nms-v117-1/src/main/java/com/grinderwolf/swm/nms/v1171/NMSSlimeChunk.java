@@ -64,7 +64,7 @@ public class NMSSlimeChunk implements SlimeChunk {
                 ListTag<CompoundTag> palette = (ListTag<CompoundTag>) Converter.convertTag("", paletteList);
                 long[] blockStates = blocksCompound.getLongArray("BlockStates");
 
-                sections[sectionId] = new CraftSlimeChunkSection(null, null, palette, blockStates, null, null, blockLightArray, skyLightArray);
+                sections[sectionId] = new CraftSlimeChunkSection(palette, blockStates, null, null, blockLightArray, skyLightArray);
             }
         }
 

@@ -4,6 +4,7 @@ import com.flowpowered.nbt.*;
 import com.google.common.collect.*;
 import com.grinderwolf.swm.api.world.*;
 import com.grinderwolf.swm.nms.*;
+import com.grinderwolf.swm.nms.world.*;
 import com.grinderwolf.swm.plugin.upgrade.*;
 import it.unimi.dsi.fastutil.ints.*;
 
@@ -145,7 +146,7 @@ public class v118WorldUpgrade implements Upgrade {
             .build();
 
     @Override
-    public void upgrade(CraftSlimeWorld world) {
+    public void upgrade(SlimeLoadedWorld world) {
         for (SlimeChunk chunk : new ArrayList<>(world.getChunks().values())) {
             CompoundTag[] tags = createBiomeSections(chunk.getBiomes(), false, 0);
 

@@ -9,7 +9,10 @@ import com.grinderwolf.swm.api.utils.*;
 import com.grinderwolf.swm.api.world.*;
 import com.grinderwolf.swm.api.world.properties.*;
 import com.grinderwolf.swm.nms.*;
+import com.grinderwolf.swm.nms.world.*;
+import com.grinderwolf.swm.plugin.*;
 import com.grinderwolf.swm.plugin.loaders.slime.*;
+import it.unimi.dsi.fastutil.longs.*;
 import lombok.*;
 
 import java.io.*;
@@ -19,7 +22,7 @@ import java.util.*;
 public class v1_9SlimeWorldFormat implements SlimeWorldReader {
 
     @Override
-    public CraftSlimeWorld deserializeWorld(byte version, SlimeLoader loader, String worldName, DataInputStream dataStream, SlimePropertyMap propertyMap, boolean readOnly)
+    public SlimeLoadedWorld deserializeWorld(byte version, SlimeLoader loader, String worldName, DataInputStream dataStream, SlimePropertyMap propertyMap, boolean readOnly)
             throws IOException, CorruptedWorldException {
 
         try {
@@ -120,7 +123,7 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
             Zstd.decompress(mapsTag, compressedMapsTag);
 
             // Chunk deserialization
-            Map<Long, SlimeChunk> chunks = readChunks(worldVersion, version, worldName, minX, minZ, width, depth, chunkBitset, chunkData);
+            Long2ObjectOpenHashMap<SlimeChunk> chunks = readChunks(worldVersion, version, worldName, minX, minZ, width, depth, chunkBitset, chunkData);
 
             // Entity deserialization
             CompoundTag entitiesCompound = readCompoundTag(entities);
@@ -207,7 +210,7 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
                 worldPropertyMap = new SlimePropertyMap();
             }
 
-            return new CraftSlimeWorld(loader, worldName, chunks, extraCompound, mapList, worldVersion, worldPropertyMap, readOnly, !readOnly);
+            return SWMPlugin.getInstance().getNms().createSlimeWorld(loader, worldName, chunks, extraCompound, mapList, worldVersion, worldPropertyMap, readOnly);
         } catch (EOFException ex) {
             throw new CorruptedWorldException(worldName, ex);
         }
@@ -218,9 +221,9 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
         return floor == num ? floor : floor - (int) (Double.doubleToRawLongBits(num) >>> 63);
     }
 
-    private static Map<Long, SlimeChunk> readChunks(byte worldVersion, int version, String worldName, int minX, int minZ, int width, int depth, BitSet chunkBitset, byte[] chunkData) throws IOException {
+    private static Long2ObjectOpenHashMap<SlimeChunk> readChunks(byte worldVersion, int version, String worldName, int minX, int minZ, int width, int depth, BitSet chunkBitset, byte[] chunkData) throws IOException {
         DataInputStream dataStream = new DataInputStream(new ByteArrayInputStream(chunkData));
-        Map<Long, SlimeChunk> chunkMap = new HashMap<>();
+        Long2ObjectOpenHashMap<SlimeChunk> chunkMap = new Long2ObjectOpenHashMap<>();
 
         for (int z = 0; z < depth; z++) {
             for (int x = 0; x < width; x++) {
@@ -348,7 +351,7 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
                 dataStream.skip(hypixelBlocksLength);
             }
 
-            chunkSectionArray[y] = new CraftSlimeChunkSection(null, null, null, null, blockStateTag, biomeTag, blockLightArray, skyLightArray);
+            chunkSectionArray[y] = new CraftSlimeChunkSection(null, null, blockStateTag, biomeTag, blockLightArray, skyLightArray);
         }
 
         return new ChunkSectionData(chunkSectionArray, minSectionY, maxSectionY);
@@ -374,45 +377,31 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
                 }
 
                 // Block data
-                byte[] blockArray = null;
-                NibbleArray dataArray = null;
-
                 ListTag<CompoundTag> paletteTag = null;
                 long[] blockStatesArray = null;
 
-                // Post 1.13 block format
-                if (worldVersion >= 0x04) {
-                    // Palette
-                    int paletteLength = dataStream.readInt();
-                    List<CompoundTag> paletteList = new ArrayList<>(paletteLength);
-                    for (int index = 0; index < paletteLength; index++) {
-                        int tagLength = dataStream.readInt();
-                        byte[] serializedTag = new byte[tagLength];
-                        dataStream.read(serializedTag);
+                // Palette
+                int paletteLength = dataStream.readInt();
+                List<CompoundTag> paletteList = new ArrayList<>(paletteLength);
+                for (int index = 0; index < paletteLength; index++) {
+                    int tagLength = dataStream.readInt();
+                    byte[] serializedTag = new byte[tagLength];
+                    dataStream.read(serializedTag);
 
-                        CompoundTag tag = readCompoundTag(serializedTag);
-                        paletteList.add(tag);
-                    }
-
-                    paletteTag = new ListTag<>("", TagType.TAG_COMPOUND, paletteList);
-
-                    // Block states
-                    int blockStatesArrayLength = dataStream.readInt();
-                    blockStatesArray = new long[blockStatesArrayLength];
-
-                    for (int index = 0; index < blockStatesArrayLength; index++) {
-                        blockStatesArray[index] = dataStream.readLong();
-                    }
-
-                } else {
-                    blockArray = new byte[4096];
-                    dataStream.read(blockArray);
-
-                    // Block Data Nibble Array
-                    byte[] dataByteArray = new byte[2048];
-                    dataStream.read(dataByteArray);
-                    dataArray = new NibbleArray((dataByteArray));
+                    CompoundTag tag = readCompoundTag(serializedTag);
+                    paletteList.add(tag);
                 }
+
+                paletteTag = new ListTag<>("", TagType.TAG_COMPOUND, paletteList);
+
+                // Block states
+                int blockStatesArrayLength = dataStream.readInt();
+                blockStatesArray = new long[blockStatesArrayLength];
+
+                for (int index = 0; index < blockStatesArrayLength; index++) {
+                    blockStatesArray[index] = dataStream.readLong();
+                }
+
 
                 // Sky Light Nibble Array
                 NibbleArray skyLightArray;
@@ -431,7 +420,7 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
                     dataStream.skip(hypixelBlocksLength);
                 }
 
-                chunkSectionArray[i] = new CraftSlimeChunkSection(blockArray, dataArray, paletteTag, blockStatesArray, null, null, blockLightArray, skyLightArray);
+                chunkSectionArray[i] = new CraftSlimeChunkSection(paletteTag, blockStatesArray, null, null, blockLightArray, skyLightArray);
             }
         }
 

@@ -1,6 +1,6 @@
 package com.grinderwolf.swm.plugin.upgrade;
 
-import com.grinderwolf.swm.nms.CraftSlimeWorld;
+import com.grinderwolf.swm.nms.world.*;
 import com.grinderwolf.swm.plugin.SWMPlugin;
 import com.grinderwolf.swm.plugin.log.Logging;
 import com.grinderwolf.swm.plugin.upgrade.v117.v117WorldUpgrade;
@@ -23,7 +23,7 @@ public class WorldUpgrader {
         upgrades.put((byte) 0x08, new v118WorldUpgrade());
     }
 
-    public static void upgradeWorld(CraftSlimeWorld world) {
+    public static void upgradeWorld(SlimeLoadedWorld world) {
         byte serverVersion = SWMPlugin.getInstance().getNms().getWorldVersion();
 
         for (byte ver = (byte) (world.getVersion() + 1); ver <= serverVersion; ver++) {
@@ -37,12 +37,7 @@ public class WorldUpgrader {
             upgrade.upgrade(world);
         }
 
-        world.setVersion(serverVersion);
-    }
-
-    @Deprecated(since = "2.6.2", forRemoval = true)
-    public static void downgradeWorld(CraftSlimeWorld world) {
-        throw new UnsupportedOperationException("Not implemented anymore.");
+        world.updateVersion(serverVersion);
     }
 
 }

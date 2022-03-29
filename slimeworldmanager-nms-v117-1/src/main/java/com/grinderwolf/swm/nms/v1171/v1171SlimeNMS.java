@@ -1,50 +1,38 @@
 package com.grinderwolf.swm.nms.v1171;
 
 import com.flowpowered.nbt.CompoundTag;
-import com.grinderwolf.swm.api.world.SlimeWorld;
-import com.grinderwolf.swm.api.world.properties.SlimeProperties;
-import com.grinderwolf.swm.nms.CraftSlimeWorld;
-import com.grinderwolf.swm.nms.SlimeNMS;
-import com.mojang.serialization.Dynamic;
-import com.mojang.serialization.Lifecycle;
-import lombok.Getter;
-import net.minecraft.SharedConstants;
-import net.minecraft.core.MappedRegistry;
+import com.grinderwolf.swm.api.loaders.*;
+import com.grinderwolf.swm.api.world.*;
+import com.grinderwolf.swm.api.world.properties.*;
+import com.grinderwolf.swm.nms.*;
+import com.grinderwolf.swm.nms.world.*;
+import com.mojang.serialization.*;
+import it.unimi.dsi.fastutil.longs.*;
+import lombok.*;
+import net.minecraft.*;
 import net.minecraft.core.Registry;
-import net.minecraft.nbt.NbtOps;
+import net.minecraft.core.*;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.dedicated.DedicatedServer;
-import net.minecraft.server.dedicated.DedicatedServerProperties;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.*;
-import net.minecraft.util.datafix.DataFixTypes;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.nbt.*;
+import net.minecraft.resources.*;
+import net.minecraft.server.*;
+import net.minecraft.server.dedicated.*;
+import net.minecraft.util.datafix.*;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelSettings;
-import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.dimension.end.EndDragonFight;
+import net.minecraft.world.level.*;
+import net.minecraft.world.level.chunk.*;
+import net.minecraft.world.level.dimension.*;
 import net.minecraft.world.level.levelgen.*;
 import net.minecraft.world.level.storage.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
-import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
-import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
+import org.apache.logging.log4j.*;
+import org.bukkit.*;
+import org.bukkit.craftbukkit.libs.org.apache.commons.io.*;
+import org.bukkit.craftbukkit.v1_17_R1.*;
 import org.bukkit.craftbukkit.v1_17_R1.scoreboard.*;
-import org.bukkit.event.world.WorldInitEvent;
-import org.bukkit.event.world.WorldLoadEvent;
 import org.jetbrains.annotations.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 @Getter
@@ -194,6 +182,11 @@ public class v1171SlimeNMS implements SlimeNMS {
         return worldServer.getSlimeWorld();
     }
 
+    @Override
+    public SlimeLoadedWorld createSlimeWorld(SlimeLoader loader, String worldName, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraCompound, List<CompoundTag> mapList, byte worldVersion, SlimePropertyMap worldPropertyMap, boolean readOnly, boolean lock) {
+        return new v1171SlimeWorld(worldVersion, loader, worldName, chunks, extraCompound, worldPropertyMap, readOnly, lock, this);
+    }
+
     public void registerWorld(CustomWorldServer server) {
         MinecraftServer mcServer = MinecraftServer.getServer();
         mcServer.initWorld(server, server.serverLevelData, mcServer.getWorldData(), server.serverLevelData.worldGenSettings());
@@ -202,6 +195,7 @@ public class v1171SlimeNMS implements SlimeNMS {
     }
 
     private CustomWorldServer createCustomWorld(SlimeWorld world, @Nullable ResourceKey<Level> dimensionOverride) {
+        v1171SlimeWorld nmsWorld = (v1171SlimeWorld) world;
         String worldName = world.getName();
 
         PrimaryLevelData worldDataServer = createWorldData(world);
@@ -217,32 +211,7 @@ public class v1171SlimeNMS implements SlimeNMS {
         LevelStem worldDimension = materials.get(dimension);
 
 
-        DimensionType type = null;
-        {
-            DimensionType predefinedType = worldDimension.type();
-
-            OptionalLong fixedTime = switch (environment) {
-                case NORMAL -> OptionalLong.empty();
-                case NETHER -> OptionalLong.of(18000L);
-                case THE_END -> OptionalLong.of(6000L);
-                case CUSTOM -> throw new UnsupportedOperationException();
-            };
-            double light = switch (environment) {
-                case NORMAL, THE_END -> 0;
-                case NETHER -> 0.1;
-                case CUSTOM -> throw new UnsupportedOperationException();
-            };
-
-            ResourceLocation infiniburn = switch (environment) {
-                case NORMAL -> BlockTags.INFINIBURN_OVERWORLD.getName();
-                case NETHER -> BlockTags.INFINIBURN_NETHER.getName();
-                case THE_END -> BlockTags.INFINIBURN_END.getName();
-                case CUSTOM -> throw new UnsupportedOperationException();
-            };
-
-
-            type = predefinedType;
-        }
+        DimensionType type = worldDimension.type();
 
         ChunkGenerator chunkGenerator = worldDimension.generator();
 
@@ -252,8 +221,9 @@ public class v1171SlimeNMS implements SlimeNMS {
         CustomWorldServer level;
 
         try {
-            level = new CustomWorldServer((CraftSlimeWorld) world, worldDataServer,
+            level = new CustomWorldServer(nmsWorld, worldDataServer,
                     worldKey, dimension, type, chunkGenerator, environment);
+            nmsWorld.setHandle(level);
         } catch (IOException ex) {
             throw new RuntimeException(ex); // TODO do something better with this?
         }

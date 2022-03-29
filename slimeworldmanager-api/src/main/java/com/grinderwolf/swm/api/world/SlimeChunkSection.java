@@ -15,6 +15,7 @@ public interface SlimeChunkSection {
      *
      * @return A <code>byte[]</code> with all the blocks of a chunk section.
      */
+    @Deprecated(forRemoval = true)
     byte[] getBlocks();
 
     /**
@@ -23,6 +24,7 @@ public interface SlimeChunkSection {
      *
      * @return A {@link NibbleArray} containing all the blocks of a chunk section.
      */
+    @Deprecated(forRemoval = true)
     NibbleArray getData();
 
     /**

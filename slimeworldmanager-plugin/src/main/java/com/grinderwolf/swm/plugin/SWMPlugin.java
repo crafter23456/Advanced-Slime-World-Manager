@@ -8,11 +8,11 @@ import com.grinderwolf.swm.api.exceptions.*;
 import com.grinderwolf.swm.api.loaders.SlimeLoader;
 import com.grinderwolf.swm.api.world.SlimeWorld;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
-import com.grinderwolf.swm.nms.CraftSlimeWorld;
 import com.grinderwolf.swm.nms.SlimeNMS;
 import com.grinderwolf.swm.nms.v1171.v1171SlimeNMS;
 import com.grinderwolf.swm.nms.v1181.v1181SlimeNMS;
 import com.grinderwolf.swm.nms.v1182.v1182SlimeNMS;
+import com.grinderwolf.swm.nms.world.*;
 import com.grinderwolf.swm.plugin.commands.CommandManager;
 import com.grinderwolf.swm.plugin.config.ConfigManager;
 import com.grinderwolf.swm.plugin.config.WorldData;
@@ -23,6 +23,7 @@ import com.grinderwolf.swm.plugin.log.Logging;
 import com.grinderwolf.swm.plugin.upgrade.WorldUpgrader;
 import com.grinderwolf.swm.plugin.world.WorldUnlocker;
 import com.grinderwolf.swm.plugin.world.importer.WorldImporter;
+import it.unimi.dsi.fastutil.longs.*;
 import lombok.Getter;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.bstats.bukkit.Metrics;
@@ -153,7 +154,7 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin, Listener {
                 .map(world -> getNms().getSlimeWorld(world))
                 .filter(Objects::nonNull)
                 .filter((slimeWorld -> !slimeWorld.isReadOnly()))
-                .map(w -> (CraftSlimeWorld) w)
+                .map(w -> (SlimeLoadedWorld) w)
                 .forEach(world -> {
                     try {
                         SlimeLoader loader = world.getLoader();
@@ -161,7 +162,7 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin, Listener {
 
                         loader.saveWorld(
                                 name,
-                                world.serialize(),
+                                world.serialize().join(),
                                 world.isLocked()
                         );
 
@@ -263,7 +264,7 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin, Listener {
 
         Logging.info("Loading world " + worldName + ".");
         byte[] serializedWorld = loader.loadWorld(worldName, readOnly);
-        CraftSlimeWorld world;
+        SlimeLoadedWorld world;
 
         try {
             world = SlimeWorldReaderRegistry.readWorld(loader, worldName, serializedWorld, propertyMap, readOnly);
@@ -310,9 +311,8 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin, Listener {
 
         Logging.info("Creating empty world " + worldName + ".");
         long start = System.currentTimeMillis();
-        CraftSlimeWorld world = new CraftSlimeWorld(loader, worldName, new HashMap<>(), new CompoundTag("",
-                new CompoundMap()), new ArrayList<>(), nms.getWorldVersion(), propertyMap, readOnly, !readOnly);
-        loader.saveWorld(worldName, world.serialize(), !readOnly);
+        SlimeLoadedWorld world = SWMPlugin.getInstance().getNms().createSlimeWorld(loader, worldName, new Long2ObjectOpenHashMap<>(), new CompoundTag("", new CompoundMap()), new ArrayList<>(), nms.getWorldVersion(), propertyMap, readOnly);
+        loader.saveWorld(worldName, world.serialize().join(), !readOnly);
 
         Logging.info("World " + worldName + " created in " + (System.currentTimeMillis() - start) + "ms.");
 
@@ -390,7 +390,7 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin, Listener {
 
         if (bukkitWorld != null) {
             // Make sure the loaded world really is a SlimeWorld and not a normal Bukkit world
-            CraftSlimeWorld slimeWorld = (CraftSlimeWorld) SWMPlugin.getInstance().getNms().getSlimeWorld(bukkitWorld);
+            SlimeLoadedWorld slimeWorld = (SlimeLoadedWorld) SWMPlugin.getInstance().getNms().getSlimeWorld(bukkitWorld);
 
             if (slimeWorld != null && currentLoader.equals(slimeWorld.getLoader())) {
                 slimeWorld.setLoader(newLoader);
@@ -440,12 +440,12 @@ public class SWMPlugin extends JavaPlugin implements SlimePlugin, Listener {
             throw new WorldLoadedException(worldDir.getName());
         }
 
-        CraftSlimeWorld world = WorldImporter.readFromDirectory(worldDir);
+        SlimeLoadedWorld world = WorldImporter.readFromDirectory(worldDir);
 
         byte[] serializedWorld;
 
         try {
-            serializedWorld = world.serialize();
+            serializedWorld = world.serialize().join();
         } catch (IndexOutOfBoundsException ex) {
             throw new WorldTooBigException(worldDir.getName());
         }

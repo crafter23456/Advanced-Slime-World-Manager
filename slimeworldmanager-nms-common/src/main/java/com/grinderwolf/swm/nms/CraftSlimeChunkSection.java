@@ -11,10 +11,6 @@ import org.jetbrains.annotations.*;
 @AllArgsConstructor
 public class CraftSlimeChunkSection implements SlimeChunkSection {
 
-    // Pre 1.13 block data
-    private final byte[] blocks;
-    private final NibbleArray data;
-
     // Post 1.13 block data
     private final ListTag<CompoundTag> palette;
     private final long[] blockStates;
@@ -30,4 +26,13 @@ public class CraftSlimeChunkSection implements SlimeChunkSection {
     @Nullable
     private final NibbleArray skyLight;
 
+    @Override
+    public byte[] getBlocks() {
+        return null;
+    }
+
+    @Override
+    public NibbleArray getData() {
+        return null;
+    }
 }

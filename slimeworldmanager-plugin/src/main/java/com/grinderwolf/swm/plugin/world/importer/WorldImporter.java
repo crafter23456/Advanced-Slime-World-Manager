@@ -9,6 +9,9 @@ import com.grinderwolf.swm.api.world.SlimeChunkSection;
 import com.grinderwolf.swm.api.world.properties.SlimeProperties;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
 import com.grinderwolf.swm.nms.*;
+import com.grinderwolf.swm.nms.world.*;
+import com.grinderwolf.swm.plugin.*;
+import it.unimi.dsi.fastutil.longs.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -41,7 +44,7 @@ public class WorldImporter {
         } else if (dataVersion <= 2586) {
             return 0x06; // 1.16 world
         } else if (dataVersion <= 2730) {
-            return 0x07;
+            return 0x07; // 1.17 world
         } else if (dataVersion <= 2975) {
             return 0x08; // 1.18 world
         } else {
@@ -49,7 +52,7 @@ public class WorldImporter {
         }
     }
 
-    public static CraftSlimeWorld readFromDirectory(File worldDir) throws InvalidWorldException, IOException {
+    public static SlimeLoadedWorld readFromDirectory(File worldDir) throws InvalidWorldException, IOException {
         File levelFile = new File(worldDir, "level.dat");
 
         if (!levelFile.exists() || !levelFile.isFile()) {
@@ -68,7 +71,7 @@ public class WorldImporter {
             throw new InvalidWorldException(worldDir);
         }
 
-        Map<Long, SlimeChunk> chunks = new HashMap<>();
+        Long2ObjectOpenHashMap<SlimeChunk> chunks = new Long2ObjectOpenHashMap<>();
 
         for (File file : regionDir.listFiles((dir, name) -> name.endsWith(".mca"))) {
             chunks.putAll(loadChunks(file, worldVersion).stream().collect(Collectors.toMap((chunk) -> ((long) chunk.getZ()) * Integer.MAX_VALUE + ((long) chunk.getX()), (chunk) -> chunk)));
@@ -108,8 +111,11 @@ public class WorldImporter {
         propertyMap.setValue(SlimeProperties.SPAWN_Y, data.getSpawnY());
         propertyMap.setValue(SlimeProperties.SPAWN_Z, data.getSpawnZ());
 
-        return new CraftSlimeWorld(null, worldDir.getName(), chunks, new CompoundTag("", extraData),
-                maps, worldVersion, propertyMap, false, true);
+        if (worldVersion != SWMPlugin.getInstance().getNms().getWorldVersion()) {
+            throw new UnsupportedOperationException("Please ensure that this world is not outdated.");
+        }
+
+        return SWMPlugin.getInstance().getNms().createSlimeWorld(null, worldDir.getName(), chunks, new CompoundTag("", extraData), maps, worldVersion, propertyMap, false, true);
     }
 
     private static CompoundTag loadMap(File mapFile) throws IOException {
@@ -280,21 +286,12 @@ public class WorldImporter {
                 continue;
             }
 
-            byte[] blocks = sectionTag.getByteArrayValue("Blocks").orElse(null);
-            NibbleArray dataArray = null;
             ListTag<CompoundTag> paletteTag = null;
             long[] blockStatesArray = null;
 
             CompoundTag blockStatesTag = null;
             CompoundTag biomeTag = null;
-
-            if (worldVersion < 0x04) {
-                dataArray = new NibbleArray(sectionTag.getByteArrayValue("Data").get());
-
-                if (isEmpty(blocks)) { // Just skip it
-                    continue;
-                }
-            } else if (worldVersion < 0x08) {
+            if (worldVersion < 0x08) {
                 paletteTag = (ListTag<CompoundTag>) sectionTag.getAsListTag("Palette").orElse(null);
                 blockStatesArray = sectionTag.getLongArrayValue("BlockStates").orElse(null);
 
@@ -313,7 +310,7 @@ public class WorldImporter {
             NibbleArray skyLightArray = sectionTag.getValue().containsKey("SkyLight") ? new NibbleArray(sectionTag.getByteArrayValue("SkyLight").get()) : null;
 
             // There is no need to do any custom processing here.
-            sectionArray[index - minSectionY] = new CraftSlimeChunkSection(blocks, dataArray, paletteTag, blockStatesArray, blockStatesTag, biomeTag, blockLightArray, skyLightArray);
+            sectionArray[index - minSectionY] = new CraftSlimeChunkSection(paletteTag, blockStatesArray, blockStatesTag, biomeTag, blockLightArray, skyLightArray);
         }
 
         for (SlimeChunkSection section : sectionArray) {

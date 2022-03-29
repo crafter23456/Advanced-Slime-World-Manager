@@ -10,8 +10,8 @@ import com.grinderwolf.swm.api.world.SlimeChunk;
 import com.grinderwolf.swm.api.world.SlimeChunkSection;
 import com.grinderwolf.swm.api.world.properties.SlimeProperties;
 import com.grinderwolf.swm.api.world.properties.SlimePropertyMap;
-import com.grinderwolf.swm.nms.CraftSlimeChunk;
-import com.grinderwolf.swm.nms.CraftSlimeWorld;
+import com.grinderwolf.swm.nms.*;
+import com.grinderwolf.swm.nms.world.*;
 import com.mojang.serialization.Codec;
 import lombok.Getter;
 import lombok.Setter;
@@ -78,7 +78,7 @@ public class CustomWorldServer extends ServerLevel {
     private static final TicketType<Unit> SWM_TICKET = TicketType.create("swm-chunk", (a, b) -> 0);
 
     @Getter
-    private final CraftSlimeWorld slimeWorld;
+    private final v1171SlimeWorld slimeWorld;
     private final Object saveLock = new Object();
     private final BiomeSource defaultBiomeSource;
 
@@ -86,7 +86,7 @@ public class CustomWorldServer extends ServerLevel {
     @Setter
     private boolean ready = false;
 
-    public CustomWorldServer(CraftSlimeWorld world, ServerLevelData worldData,
+    public CustomWorldServer(v1171SlimeWorld world, ServerLevelData worldData,
                              ResourceKey<net.minecraft.world.level.Level> worldKey, ResourceKey<LevelStem> dimensionKey,
                              DimensionType dimensionManager, ChunkGenerator chunkGenerator,
                              org.bukkit.World.Environment environment) throws IOException {
@@ -177,8 +177,8 @@ public class CustomWorldServer extends ServerLevel {
             try {
                 Bukkit.getLogger().log(Level.INFO, "Saving world " + slimeWorld.getName() + "...");
                 long start = System.currentTimeMillis();
-                byte[] serializedWorld = slimeWorld.serialize();
-                slimeWorld.getLoader().saveWorld(slimeWorld.getName(), serializedWorld, false);
+                CompletableFuture<byte[]> serializedWorld = slimeWorld.serialize();
+                slimeWorld.getLoader().saveWorld(slimeWorld.getName(), serializedWorld.join(), false);
                 Bukkit.getLogger().log(Level.INFO, "World " + slimeWorld.getName() + " saved in " + (System.currentTimeMillis() - start) + "ms.");
             } catch (IOException | IllegalStateException ex) {
                 ex.printStackTrace();

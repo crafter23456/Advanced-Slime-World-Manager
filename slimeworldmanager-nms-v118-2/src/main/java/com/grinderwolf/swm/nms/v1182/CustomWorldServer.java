@@ -81,7 +81,7 @@ public class CustomWorldServer extends ServerLevel {
                              Holder<DimensionType> dimensionManager, ChunkGenerator chunkGenerator,
                              org.bukkit.World.Environment environment) throws IOException {
         super(MinecraftServer.getServer(), MinecraftServer.getServer().executor,
-                v1182SlimeNMS.CUSTOM_LEVEL_STORAGE.createAccess(world.getName(), dimensionKey),
+                v1182SlimeNMS.CUSTOM_LEVEL_STORAGE.createAccess(world.getName() + UUID.randomUUID(), dimensionKey),
                 worldData, worldKey, dimensionManager, MinecraftServer.getServer().progressListenerFactory.create(11),
                 chunkGenerator, false, 0, new ArrayList<>(), true, environment, null, null);
 
@@ -103,6 +103,10 @@ public class CustomWorldServer extends ServerLevel {
         }
 
         this.keepSpawnInMemory = false;
+        this.entityManager.addLegacyChunkEntities(EntityType.loadEntitiesRecursive(world.getSavedEntities()
+                        .stream()
+                        .map((tag) -> (net.minecraft.nbt.CompoundTag) Converter.convertTag(tag))
+                        .collect(Collectors.toList()), this));
     }
 
     @Override
@@ -282,16 +286,6 @@ public class CustomWorldServer extends ServerLevel {
                         }
                     }
                 }
-            }
-
-            // Load entities
-            List<CompoundTag> entities = chunk.getEntities();
-            if (entities != null) {
-                this.entityManager.addLegacyChunkEntities(EntityType.loadEntitiesRecursive(entities
-                                .stream()
-                                .map((tag) -> (net.minecraft.nbt.CompoundTag) Converter.convertTag(tag))
-                                .collect(Collectors.toList()),
-                        this));
             }
         };
 

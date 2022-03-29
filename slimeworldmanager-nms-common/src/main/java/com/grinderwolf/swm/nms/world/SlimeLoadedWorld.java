@@ -7,7 +7,7 @@ import com.grinderwolf.swm.nms.*;
 import java.io.*;
 import java.util.concurrent.*;
 
-public interface SlimeLoadedWorld extends SlimeWorld, SlimeWorldSource {
+public interface SlimeLoadedWorld extends SlimeWorld {
 
     byte getVersion();
 

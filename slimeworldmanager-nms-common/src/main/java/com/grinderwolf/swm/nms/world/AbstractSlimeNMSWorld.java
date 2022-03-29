@@ -3,6 +3,7 @@ package com.grinderwolf.swm.nms.world;
 import com.flowpowered.nbt.*;
 import com.flowpowered.nbt.stream.*;
 import com.github.luben.zstd.*;
+import com.grinderwolf.swm.api.exceptions.*;
 import com.grinderwolf.swm.api.loaders.*;
 import com.grinderwolf.swm.api.utils.*;
 import com.grinderwolf.swm.api.world.*;
@@ -144,7 +145,6 @@ public abstract class AbstractSlimeNMSWorld extends AbstractSlimeLoadedWorld {
                         // Entities
 
                         List<CompoundTag> entitiesList = chunkSerialization.entities();
-
                         outStream.writeBoolean(!entitiesList.isEmpty());
 
                         if (!entitiesList.isEmpty()) {

@@ -39,33 +39,20 @@ import java.util.*;
 public class v1181SlimeNMS implements SlimeNMS {
 
     private static final Logger LOGGER = LogManager.getLogger("SWM");
-    private static final File UNIVERSE_DIR;
-    public static LevelStorageSource CONVERTABLE;
+
     public static boolean isPaperMC;
+    public static LevelStorageSource CUSTOM_LEVEL_STORAGE;
 
     static {
-        Path path;
-
         try {
-            path = Files.createTempDirectory("swm-" + UUID.randomUUID().toString().substring(0, 5) + "-");
+            Path path = Files.createTempDirectory("swm-" + UUID.randomUUID().toString().substring(0, 5)).toAbsolutePath();
+            CUSTOM_LEVEL_STORAGE = new LevelStorageSource(path, path, DataFixers.getDataFixer());
+
+            FileUtils.forceDeleteOnExit(path.toFile());
+
         } catch (IOException ex) {
-//            LOGGER.log(Level.FATAL, "Failed to create temp directory", ex);
-            path = null;
-            System.exit(1);
+            throw new IllegalStateException("Couldn't create dummy file directory.", ex);
         }
-
-        UNIVERSE_DIR = path.toFile();
-        CONVERTABLE = LevelStorageSource.createDefault(path);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-
-            try {
-                FileUtils.deleteDirectory(UNIVERSE_DIR);
-            } catch (IOException ex) {
-//                LOGGER.log(Level.FATAL, "Failed to delete temp directory", ex);
-            }
-
-        }));
     }
 
     private final byte worldVersion = 0x08;
@@ -182,8 +169,8 @@ public class v1181SlimeNMS implements SlimeNMS {
     }
 
     @Override
-    public SlimeLoadedWorld createSlimeWorld(SlimeLoader loader, String worldName, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraCompound, List<CompoundTag> mapList, byte worldVersion, SlimePropertyMap worldPropertyMap, boolean readOnly, boolean lock) {
-        return new v1181SlimeWorld(this, worldVersion, loader, worldName, chunks, extraCompound, worldPropertyMap, readOnly, lock);
+    public SlimeLoadedWorld createSlimeWorld(SlimeLoader loader, String worldName, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraCompound, List<CompoundTag> mapList, byte worldVersion, SlimePropertyMap worldPropertyMap, boolean readOnly, boolean lock, List<CompoundTag> entities) {
+        return new v1181SlimeWorld(this, worldVersion, loader, worldName, chunks, extraCompound, worldPropertyMap, readOnly, lock, entities);
     }
 
     public void registerWorld(CustomWorldServer server) {

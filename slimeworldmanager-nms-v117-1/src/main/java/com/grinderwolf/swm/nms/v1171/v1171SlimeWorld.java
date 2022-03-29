@@ -21,7 +21,7 @@ public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
 
     private CustomWorldServer handle;
 
-    public v1171SlimeWorld(byte version, SlimeLoader loader, String name, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraData, SlimePropertyMap propertyMap, boolean readOnly, boolean lock, SlimeNMS nms) {
+    public v1171SlimeWorld(SlimeNMS nms, byte version, SlimeLoader loader, String name, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraData, SlimePropertyMap propertyMap, boolean readOnly, boolean lock) {
         super(version, loader, name, chunks, extraData, propertyMap, readOnly, lock, nms);
     }
 
@@ -174,7 +174,8 @@ public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
     }
 
     @Override
-    public SlimeLoadedWorld createSlimeWorld(SlimeLoader loader, String worldName, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraCompound, List<CompoundTag> mapList, byte worldVersion, SlimePropertyMap worldPropertyMap, boolean readOnly, boolean lock) {
-        return new v1171SlimeWorld(version, loader, name, new Long2ObjectOpenHashMap<>(chunks), extraData.clone(), propertyMap, readOnly, lock, nms);
+    public SlimeLoadedWorld createSlimeWorld(String worldName, SlimeLoader loader, boolean lock) {
+        return new v1171SlimeWorld(nms, version, loader == null ? this.loader : loader, worldName, new Long2ObjectOpenHashMap<>(chunks), extraData.clone(),
+                propertyMap, loader == null, lock);
     }
 }

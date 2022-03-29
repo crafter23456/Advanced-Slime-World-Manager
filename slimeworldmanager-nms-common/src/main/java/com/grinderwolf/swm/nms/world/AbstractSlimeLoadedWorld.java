@@ -66,8 +66,7 @@ public abstract class AbstractSlimeLoadedWorld implements SlimeLoadedWorld {
             }
         }
 
-        SlimeLoadedWorld world = createSlimeWorld(loader == null ? this.loader : loader, worldName, new Long2ObjectOpenHashMap<>(chunks), extraData.clone(),
-                new ArrayList<>(), version, propertyMap, loader == null, lock);
+        SlimeLoadedWorld world = createSlimeWorld(worldName, loader, lock);
 
         if (loader != null) {
             loader.saveWorld(worldName, world.serialize().join(), lock);
@@ -75,6 +74,8 @@ public abstract class AbstractSlimeLoadedWorld implements SlimeLoadedWorld {
 
         return world;
     }
+
+    public abstract SlimeLoadedWorld createSlimeWorld(String worldName, SlimeLoader loader, boolean lock);
 
     @Override
     public String getName() {

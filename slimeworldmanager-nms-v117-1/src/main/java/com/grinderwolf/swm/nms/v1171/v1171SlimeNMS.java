@@ -24,6 +24,7 @@ import net.minecraft.world.level.chunk.*;
 import net.minecraft.world.level.dimension.*;
 import net.minecraft.world.level.levelgen.*;
 import net.minecraft.world.level.storage.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.*;
 import org.bukkit.*;
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.*;
@@ -39,33 +40,19 @@ import java.util.*;
 public class v1171SlimeNMS implements SlimeNMS {
 
     private static final Logger LOGGER = LogManager.getLogger("SWM");
-    private static final File UNIVERSE_DIR;
-    public static LevelStorageSource CONVERTABLE;
+    public static LevelStorageSource CUSTOM_LEVEL_STORAGE;
     private static boolean isPaperMC;
 
     static {
-        Path path;
-
         try {
-            path = Files.createTempDirectory("swm-" + UUID.randomUUID().toString().substring(0, 5) + "-");
+            Path path = Files.createTempDirectory("swm-" + UUID.randomUUID().toString().substring(0, 5)).toAbsolutePath();
+            CUSTOM_LEVEL_STORAGE = new LevelStorageSource(path, path, DataFixers.getDataFixer());
+
+            FileUtils.forceDeleteOnExit(path.toFile());
+
         } catch (IOException ex) {
-//            LOGGER.log(Level.FATAL, "Failed to create temp directory", ex);
-            path = null;
-            System.exit(1);
+            throw new IllegalStateException("Couldn't create dummy file directory.", ex);
         }
-
-        UNIVERSE_DIR = path.toFile();
-        CONVERTABLE = LevelStorageSource.createDefault(path);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-
-            try {
-                FileUtils.deleteDirectory(UNIVERSE_DIR);
-            } catch (IOException ex) {
-//                LOGGER.log(Level.FATAL, "Failed to delete temp directory", ex);
-            }
-
-        }));
     }
 
     private final byte worldVersion = 0x07;
@@ -183,8 +170,8 @@ public class v1171SlimeNMS implements SlimeNMS {
     }
 
     @Override
-    public SlimeLoadedWorld createSlimeWorld(SlimeLoader loader, String worldName, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraCompound, List<CompoundTag> mapList, byte worldVersion, SlimePropertyMap worldPropertyMap, boolean readOnly, boolean lock) {
-        return new v1171SlimeWorld(worldVersion, loader, worldName, chunks, extraCompound, worldPropertyMap, readOnly, lock, this);
+    public SlimeLoadedWorld createSlimeWorld(SlimeLoader loader, String worldName, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraCompound, List<CompoundTag> mapList, byte worldVersion, SlimePropertyMap worldPropertyMap, boolean readOnly, boolean lock, List<CompoundTag> entities) {
+        return new v1171SlimeWorld(this, worldVersion, loader, worldName, chunks, extraCompound, worldPropertyMap, readOnly, lock);
     }
 
     public void registerWorld(CustomWorldServer server) {

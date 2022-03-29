@@ -128,22 +128,25 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
             // Entity deserialization
             CompoundTag entitiesCompound = readCompoundTag(entities);
 
+            List<CompoundTag> entitiesList = Collections.emptyList();
             if (entitiesCompound != null) {
-                ListTag<CompoundTag> entitiesList = (ListTag<CompoundTag>) entitiesCompound.getValue().get("entities");
+                entitiesList = ((ListTag<CompoundTag>) entitiesCompound.getValue().get("entities")).getValue();
 
-                for (CompoundTag entityCompound : entitiesList.getValue()) {
-                    ListTag<DoubleTag> listTag = (ListTag<DoubleTag>) entityCompound.getAsListTag("Pos").get();
+                if (version <= 7) {
+                    for (CompoundTag entityCompound : entitiesList) {
+                        ListTag<DoubleTag> listTag = (ListTag<DoubleTag>) entityCompound.getAsListTag("Pos").get();
 
-                    int chunkX = floor(listTag.getValue().get(0).getValue()) >> 4;
-                    int chunkZ = floor(listTag.getValue().get(2).getValue()) >> 4;
-                    long chunkKey = ((long) chunkZ) * Integer.MAX_VALUE + ((long) chunkX);
-                    SlimeChunk chunk = chunks.get(chunkKey);
+                        int chunkX = floor(listTag.getValue().get(0).getValue()) >> 4;
+                        int chunkZ = floor(listTag.getValue().get(2).getValue()) >> 4;
+                        long chunkKey = ((long) chunkZ) * Integer.MAX_VALUE + ((long) chunkX);
+                        SlimeChunk chunk = chunks.get(chunkKey);
 
-                    if (chunk == null) {
-                        throw new CorruptedWorldException(worldName);
+                        if (chunk == null) {
+                            throw new CorruptedWorldException(worldName);
+                        }
+
+                        chunk.getEntities().add(entityCompound);
                     }
-
-                    chunk.getEntities().add(entityCompound);
                 }
             }
 
@@ -210,7 +213,7 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
                 worldPropertyMap = new SlimePropertyMap();
             }
 
-            return SWMPlugin.getInstance().getNms().createSlimeWorld(loader, worldName, chunks, extraCompound, mapList, worldVersion, worldPropertyMap, readOnly);
+            return SWMPlugin.getInstance().getNms().createSlimeWorld(loader, worldName, chunks, extraCompound, mapList, worldVersion, worldPropertyMap, readOnly, !readOnly, entitiesList);
         } catch (EOFException ex) {
             throw new CorruptedWorldException(worldName, ex);
         }

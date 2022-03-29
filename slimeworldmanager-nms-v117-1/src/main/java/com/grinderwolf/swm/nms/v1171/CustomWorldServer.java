@@ -55,14 +55,7 @@ import org.bukkit.event.world.WorldSaveEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -91,7 +84,7 @@ public class CustomWorldServer extends ServerLevel {
                              DimensionType dimensionManager, ChunkGenerator chunkGenerator,
                              org.bukkit.World.Environment environment) throws IOException {
         super(MinecraftServer.getServer(), MinecraftServer.getServer().executor,
-                v1171SlimeNMS.CONVERTABLE.createAccess(world.getName(), dimensionKey),
+                v1171SlimeNMS.CUSTOM_LEVEL_STORAGE.createAccess(world.getName() + UUID.randomUUID(), dimensionKey),
                 worldData, worldKey, dimensionManager, MinecraftServer.getServer().progressListenerFactory.create(11),
                 chunkGenerator, false, 0, new ArrayList<>(), true, environment, null, null);
 

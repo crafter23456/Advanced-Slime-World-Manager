@@ -115,7 +115,7 @@ public class WorldImporter {
             throw new UnsupportedOperationException("Please ensure that this world is not outdated.");
         }
 
-        return SWMPlugin.getInstance().getNms().createSlimeWorld(null, worldDir.getName(), chunks, new CompoundTag("", extraData), maps, worldVersion, propertyMap, false, true);
+        return SWMPlugin.getInstance().getNms().createSlimeWorld(null, worldDir.getName(), chunks, new CompoundTag("", extraData), maps, worldVersion, propertyMap, false, true, null);
     }
 
     private static CompoundTag loadMap(File mapFile) throws IOException {

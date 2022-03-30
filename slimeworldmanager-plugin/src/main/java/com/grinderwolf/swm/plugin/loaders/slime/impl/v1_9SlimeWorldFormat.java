@@ -132,7 +132,7 @@ public class v1_9SlimeWorldFormat implements SlimeWorldReader {
             if (entitiesCompound != null) {
                 entitiesList = ((ListTag<CompoundTag>) entitiesCompound.getValue().get("entities")).getValue();
 
-                if (worldVersion >= 0x07) {
+                if (worldVersion <= 0x07) {
                     for (CompoundTag entityCompound : entitiesList) {
                         ListTag<DoubleTag> listTag = (ListTag<DoubleTag>) entityCompound.getAsListTag("Pos").get();
 

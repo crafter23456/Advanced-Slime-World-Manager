@@ -311,6 +311,7 @@ public class CustomWorldServer extends ServerLevel {
             loadedEntities = 0;
 
             if (entities != null) {
+                System.out.println(entities);
                 this.entityManager.addLegacyChunkEntities(EntityType.loadEntitiesRecursive(entities
                                 .stream()
                                 .map((tag) -> (net.minecraft.nbt.CompoundTag) Converter.convertTag(tag))

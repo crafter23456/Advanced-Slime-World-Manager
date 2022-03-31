@@ -145,6 +145,8 @@ public abstract class AbstractSlimeNMSWorld extends AbstractSlimeLoadedWorld {
                         // Entities
 
                         List<CompoundTag> entitiesList = chunkSerialization.entities();
+                        java.lang.System.out.println("Serializing ENTITIES: " + entitiesList.size());
+                         java.lang.System.out.println(entitiesList);
                         outStream.writeBoolean(!entitiesList.isEmpty());
 
                         if (!entitiesList.isEmpty()) {

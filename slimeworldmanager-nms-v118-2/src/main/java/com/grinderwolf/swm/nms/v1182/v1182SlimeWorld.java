@@ -21,14 +21,12 @@ public class v1182SlimeWorld extends AbstractSlimeNMSWorld {
     private static final MinecraftInternalPlugin INTERNAL_PLUGIN = new MinecraftInternalPlugin();
 
     private CustomWorldServer handle;
-    private final List<CompoundTag> savedEntities;
 
     public v1182SlimeWorld(SlimeNMS nms, byte version, SlimeLoader loader, String name,
                            Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraData,
                            SlimePropertyMap propertyMap, boolean readOnly, boolean lock,
                            List<CompoundTag> savedEntities) {
-        super(version, loader, name, chunks, extraData, propertyMap, readOnly, lock, nms);
-        this.savedEntities = savedEntities;
+        super(version, loader, name, chunks, extraData, propertyMap, readOnly, lock, savedEntities, nms);
     }
 
 
@@ -177,11 +175,7 @@ public class v1182SlimeWorld extends AbstractSlimeNMSWorld {
     @Override
     public SlimeLoadedWorld createSlimeWorld(String worldName, SlimeLoader loader, boolean lock) {
         return new v1182SlimeWorld(nms, version, loader == null ? this.loader : loader, worldName, new Long2ObjectOpenHashMap<>(chunks), extraData.clone(),
-                propertyMap, loader == null, lock, savedEntities);
-    }
-
-    public List<CompoundTag> getSavedEntities() {
-        return savedEntities;
+                propertyMap, loader == null, lock, entities);
     }
 
 }

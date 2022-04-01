@@ -22,10 +22,13 @@ public abstract class AbstractSlimeLoadedWorld implements SlimeLoadedWorld {
     protected final boolean readOnly;
     private final boolean lock;
 
+    protected final List<CompoundTag> entities;
+
     private final Object chunkAccessLock = new Object();
 
     protected AbstractSlimeLoadedWorld(byte version, SlimeLoader loader, String name,
-                                       Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraData, SlimePropertyMap propertyMap, boolean readOnly, boolean lock) {
+                                       Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraData, SlimePropertyMap propertyMap,
+                                       boolean readOnly, boolean lock, List<CompoundTag> entities) {
         this.version = version;
         this.loader = loader;
         this.name = name;
@@ -34,6 +37,7 @@ public abstract class AbstractSlimeLoadedWorld implements SlimeLoadedWorld {
         this.propertyMap = propertyMap;
         this.readOnly = readOnly;
         this.lock = lock;
+        this.entities = entities;
     }
 
     @Override
@@ -76,6 +80,10 @@ public abstract class AbstractSlimeLoadedWorld implements SlimeLoadedWorld {
     }
 
     public abstract SlimeLoadedWorld createSlimeWorld(String worldName, SlimeLoader loader, boolean lock);
+
+    public List<CompoundTag> getEntities() {
+        return entities;
+    }
 
     @Override
     public String getName() {

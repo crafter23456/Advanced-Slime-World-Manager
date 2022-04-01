@@ -118,6 +118,11 @@ public class CustomWorldServer extends ServerLevel {
                 }
             };
         }
+
+        this.entityManager.addLegacyChunkEntities(EntityType.loadEntitiesRecursive(world.getEntities()
+                .stream()
+                .map((tag) -> (net.minecraft.nbt.CompoundTag) Converter.convertTag(tag))
+                .collect(Collectors.toList()), this));
     }
 
     public static CompletableFuture<Integer> relight(net.minecraft.world.level.Level world, Collection<? extends LevelChunk> chunks) {
@@ -311,7 +316,6 @@ public class CustomWorldServer extends ServerLevel {
             loadedEntities = 0;
 
             if (entities != null) {
-                System.out.println(entities);
                 this.entityManager.addLegacyChunkEntities(EntityType.loadEntitiesRecursive(entities
                                 .stream()
                                 .map((tag) -> (net.minecraft.nbt.CompoundTag) Converter.convertTag(tag))

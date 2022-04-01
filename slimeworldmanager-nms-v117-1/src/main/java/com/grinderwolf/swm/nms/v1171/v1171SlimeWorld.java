@@ -7,6 +7,7 @@ import com.grinderwolf.swm.api.world.properties.*;
 import com.grinderwolf.swm.nms.*;
 import com.grinderwolf.swm.nms.world.*;
 import it.unimi.dsi.fastutil.longs.*;
+import net.minecraft.world.entity.*;
 import org.bukkit.*;
 import org.bukkit.craftbukkit.v1_17_R1.scheduler.*;
 import org.bukkit.scheduler.*;
@@ -14,6 +15,7 @@ import org.bukkit.scheduler.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.*;
 
 public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
 
@@ -21,8 +23,9 @@ public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
 
     private CustomWorldServer handle;
 
-    public v1171SlimeWorld(SlimeNMS nms, byte version, SlimeLoader loader, String name, Long2ObjectOpenHashMap<SlimeChunk> chunks, CompoundTag extraData, SlimePropertyMap propertyMap, boolean readOnly, boolean lock) {
-        super(version, loader, name, chunks, extraData, propertyMap, readOnly, lock, nms);
+    public v1171SlimeWorld(SlimeNMS nms, byte version, SlimeLoader loader, String name, Long2ObjectOpenHashMap<SlimeChunk> chunks,
+                           CompoundTag extraData, SlimePropertyMap propertyMap, boolean readOnly, boolean lock, List<CompoundTag> entities) {
+        super(version, loader, name, chunks, extraData, propertyMap, readOnly, lock, entities, nms);
     }
 
 
@@ -35,16 +38,31 @@ public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
         ByteArrayOutputStream outByteStream = new ByteArrayOutputStream(16384);
         DataOutputStream outStream = new DataOutputStream(outByteStream);
 
-        List<CompletableFuture<Void>> futures = new ArrayList<>(chunks.size());
-        List<CompoundTag> entities = new ArrayList<>();
+        List<Runnable> runnables = new ArrayList<>(chunks.size() + 1);
         List<CompoundTag> tileEntities = new ArrayList<>();
+        List<CompoundTag> entities = new ArrayList<>();
+
+        SlimeLogger.debug("Starting save logic...");
+        // Save entities
+        runnables.add(() -> {
+            if (handle != null) {
+                SlimeLogger.debug("Saving entities");
+                for (Entity entity : this.handle.entityManager.getEntityGetter().getAll()) {
+                    SlimeLogger.debug("Saving: " + entity);
+                    net.minecraft.nbt.CompoundTag entityNbt = new net.minecraft.nbt.CompoundTag();
+                    if (entity.save(entityNbt)) {
+                        entities.add((CompoundTag) Converter.convertTag("", entityNbt));
+                    }
+                }
+            }
+        });
 
         for (SlimeChunk chunk : chunks) {
-            CompletableFuture<Void> serializeFuture = new CompletableFuture<>();
-
-            serializeFuture.thenRun(() -> {
-                entities.addAll(chunk.getEntities());
-                tileEntities.addAll(chunk.getTileEntities());
+            Runnable runnable = () -> {
+                //SlimeLogger.debug("Saving: " + chunk.getX() + " " + chunk.getZ());
+                List<CompoundTag> chunkTileEntities = chunk.getTileEntities();
+                //SlimeLogger.debug("Saving tile entities: " + chunkTileEntities.size());
+                tileEntities.addAll(chunkTileEntities);
 
                 try {
                     // Height Maps
@@ -115,9 +133,9 @@ public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            });
+            };
 
-            futures.add(serializeFuture);
+            runnables.add(runnable);
         }
 
 
@@ -127,14 +145,14 @@ public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
                 throw new UnsupportedOperationException("Cannot save the world while the server is stopping async!");
             }
 
-            for (CompletableFuture<Void> completableFuture : futures) {
-                completableFuture.complete(null);
+            for (Runnable completableFuture : runnables) {
+                completableFuture.run();
             }
             return CompletableFuture.completedFuture(new ChunkSerialization(outByteStream.toByteArray(), tileEntities, entities));
         } else {
             CompletableFuture<ChunkSerialization> future = new CompletableFuture<>();
 
-            Iterator<CompletableFuture<Void>> futuresIterator = futures.iterator();
+            Iterator<Runnable> futuresIterator = runnables.iterator();
 
             /*
             Create a task that saves chunks for at the most 200 ms per tick.
@@ -144,12 +162,14 @@ public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
                 public void run() {
                     long timeSaved = 0;
                     long capturedTime = System.currentTimeMillis();
+                    SlimeLogger.debug("Running saving task...");
 
                     // 200 max ms on one tick for saving OR if the server is stopping force it to finish OR if it's on main thread to avoid deadlock
                     while (futuresIterator.hasNext() && (timeSaved < 200 || Bukkit.isStopping() || Bukkit.isPrimaryThread())) {
-                        futuresIterator.next().complete(null);
+                        futuresIterator.next().run();
                         timeSaved += System.currentTimeMillis() - capturedTime;
                     }
+                    SlimeLogger.debug(futuresIterator.hasNext() ? "finished in " : "continuing after " + timeSaved);
 
                     // Once it is empty, complete the future and stop it from executing further.
                     if (!futuresIterator.hasNext()) {
@@ -176,6 +196,6 @@ public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
     @Override
     public SlimeLoadedWorld createSlimeWorld(String worldName, SlimeLoader loader, boolean lock) {
         return new v1171SlimeWorld(nms, version, loader == null ? this.loader : loader, worldName, new Long2ObjectOpenHashMap<>(chunks), extraData.clone(),
-                propertyMap, loader == null, lock);
+                propertyMap, loader == null, lock, entities);
     }
 }

@@ -3,7 +3,6 @@ package com.grinderwolf.swm.nms.world;
 import com.flowpowered.nbt.*;
 import com.flowpowered.nbt.stream.*;
 import com.github.luben.zstd.*;
-import com.grinderwolf.swm.api.exceptions.*;
 import com.grinderwolf.swm.api.loaders.*;
 import com.grinderwolf.swm.api.utils.*;
 import com.grinderwolf.swm.api.world.*;
@@ -25,8 +24,10 @@ public abstract class AbstractSlimeNMSWorld extends AbstractSlimeLoadedWorld {
     private final Object chunkAccessLock = new Object();
 
     protected AbstractSlimeNMSWorld(byte version, SlimeLoader loader, String name, Long2ObjectOpenHashMap<SlimeChunk> chunks,
-                                    CompoundTag extraData, SlimePropertyMap propertyMap, boolean readOnly, boolean lock, SlimeNMS nms) {
-        super(version, loader, name, chunks, extraData, propertyMap, readOnly, lock);
+                                    CompoundTag extraData, SlimePropertyMap propertyMap, boolean readOnly, boolean lock,
+                                    List<CompoundTag> entities,
+                                    SlimeNMS nms) {
+        super(version, loader, name, chunks, extraData, propertyMap, readOnly, lock, entities);
         this.nms = nms;
     }
 
@@ -145,8 +146,6 @@ public abstract class AbstractSlimeNMSWorld extends AbstractSlimeLoadedWorld {
                         // Entities
 
                         List<CompoundTag> entitiesList = chunkSerialization.entities();
-                        java.lang.System.out.println("Serializing ENTITIES: " + entitiesList.size());
-                         java.lang.System.out.println(entitiesList);
                         outStream.writeBoolean(!entitiesList.isEmpty());
 
                         if (!entitiesList.isEmpty()) {

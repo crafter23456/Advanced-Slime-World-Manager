@@ -103,7 +103,7 @@ public class CustomWorldServer extends ServerLevel {
         }
 
         this.keepSpawnInMemory = false;
-        this.entityManager.addLegacyChunkEntities(EntityType.loadEntitiesRecursive(world.getSavedEntities()
+        this.entityManager.addLegacyChunkEntities(EntityType.loadEntitiesRecursive(world.getEntities()
                         .stream()
                         .map((tag) -> (net.minecraft.nbt.CompoundTag) Converter.convertTag(tag))
                         .collect(Collectors.toList()), this));

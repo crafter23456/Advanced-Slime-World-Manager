@@ -160,7 +160,7 @@ public class v1182SlimeWorld extends AbstractSlimeNMSWorld {
 
             // If running on main thread, save it all to avoid a possible deadlock
             if (Bukkit.isPrimaryThread()) {
-                runnable.runTask(INTERNAL_PLUGIN);
+                runnable.run();
             }
 
             // If there is still more to complete, start the task to begin saving on next ticks

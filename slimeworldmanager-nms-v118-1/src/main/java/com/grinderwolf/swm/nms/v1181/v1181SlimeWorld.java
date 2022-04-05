@@ -155,7 +155,10 @@ public class v1181SlimeWorld extends AbstractSlimeNMSWorld {
                     // Once it is empty, complete the future and stop it from executing further.
                     if (!futuresIterator.hasNext()) {
                         future.complete(new ChunkSerialization(outByteStream.toByteArray(), tileEntities, entities));
-                        cancel();
+                        try {
+                            cancel();
+                        } catch (Exception ignored) { // Errors if the task is not schedule yet, so just ignore it
+                        }
                     }
                 }
             };

@@ -22,12 +22,17 @@ public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
     private static final MinecraftInternalPlugin INTERNAL_PLUGIN = new MinecraftInternalPlugin();
 
     private CustomWorldServer handle;
+    private final Long2ObjectOpenHashMap<List<CompoundTag>> entityStorage = new Long2ObjectOpenHashMap<>();
 
     public v1171SlimeWorld(SlimeNMS nms, byte version, SlimeLoader loader, String name, Long2ObjectOpenHashMap<SlimeChunk> chunks,
                            CompoundTag extraData, SlimePropertyMap propertyMap, boolean readOnly, boolean lock, List<CompoundTag> entities) {
         super(version, loader, name, chunks, extraData, propertyMap, readOnly, lock, entities, nms);
     }
 
+
+    public Long2ObjectOpenHashMap<List<CompoundTag>> getEntityStorage() {
+        return entityStorage;
+    }
 
     public void setHandle(CustomWorldServer handle) {
         this.handle = handle;
@@ -47,12 +52,9 @@ public class v1171SlimeWorld extends AbstractSlimeNMSWorld {
         runnables.add(() -> {
             if (handle != null) {
                 SlimeLogger.debug("Saving entities");
-                for (Entity entity : this.handle.entityManager.getEntityGetter().getAll()) {
-                    SlimeLogger.debug("Saving: " + entity);
-                    net.minecraft.nbt.CompoundTag entityNbt = new net.minecraft.nbt.CompoundTag();
-                    if (entity.save(entityNbt)) {
-                        entities.add((CompoundTag) Converter.convertTag("", entityNbt));
-                    }
+                this.handle.entityManager.saveAll();
+                for (List<CompoundTag> value : entityStorage.values()) {
+                    value.addAll(value);
                 }
             }
         });

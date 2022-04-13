@@ -31,6 +31,22 @@ public class ClassModifier {
         return customLoader != null && customLoader.saveChunk(world, chunkAccess);
     }
 
+    public static Object handleLoadEntities(Object storage, Object coords) {
+        if (customLoader == null) {
+            return null;
+        }
+
+        return customLoader.loadEntities(storage, coords);
+    }
+
+    public static Object handleSaveEntities(Object storage, Object entities) {
+        if (customLoader == null) {
+            return null;
+        }
+
+        return customLoader.storeEntities(storage, entities);
+    }
+
     public static boolean isCustomWorld(Object world) {
         return customLoader != null && customLoader.isCustomWorld(world);
     }

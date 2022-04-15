@@ -75,6 +75,16 @@ public class CraftCLSMBridge implements CLSMBridge {
     }
 
     @Override
+    public boolean flushEntities(Object storage) {
+        EntityStorage entityStorage = (EntityStorage) storage;
+        if (!isCustomWorld(entityStorage.level)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
     public boolean isCustomWorld(Object world) {
         return world instanceof CustomWorldServer;
     }

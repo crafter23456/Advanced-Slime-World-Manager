@@ -343,6 +343,7 @@ public class CustomWorldServer extends ServerLevel {
         if (entities == null) {
             entities = new ArrayList<>();
         }
+        System.out.println("LOADING ENTITIES IN: " + pos);
 
         return CompletableFuture.completedFuture(new ChunkEntities<>(pos, new ArrayList<>(
                 EntityType.loadEntitiesRecursive(entities
@@ -364,6 +365,7 @@ public class CustomWorldServer extends ServerLevel {
             }
 
         });
+        System.out.println("SAVING ENTITIES IN: " + entities.getPos());
 
         slimeWorld.getEntityStorage().put(entities.getPos().longKey, entitiesSerialized);
     }

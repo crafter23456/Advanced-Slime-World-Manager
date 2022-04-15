@@ -31,7 +31,7 @@ public class ClassModifier {
         return customLoader != null && customLoader.saveChunk(world, chunkAccess);
     }
 
-    public static Object handleLoadEntities(Object storage, Object coords) {
+    public static Object loadEntities(Object storage, Object coords) {
         if (customLoader == null) {
             return null;
         }
@@ -39,12 +39,20 @@ public class ClassModifier {
         return customLoader.loadEntities(storage, coords);
     }
 
-    public static Object handleSaveEntities(Object storage, Object entities) {
+    public static boolean storeEntities(Object storage, Object entities) {
         if (customLoader == null) {
-            return null;
+            return false;
         }
 
         return customLoader.storeEntities(storage, entities);
+    }
+
+    public static boolean flusheEntities(Object storage) {
+        if (customLoader == null) {
+            return false;
+        }
+
+        return customLoader.flushEntities(storage);
     }
 
     public static boolean isCustomWorld(Object world) {

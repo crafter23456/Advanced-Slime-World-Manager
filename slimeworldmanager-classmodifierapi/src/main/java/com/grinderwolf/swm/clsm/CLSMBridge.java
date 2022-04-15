@@ -41,6 +41,15 @@ public interface CLSMBridge {
     }
 
     /**
+     * Called when an entity chunk should be flushed
+     *
+     * @return return entity list to run custom, null to default to normal behavior
+     */
+    default boolean flushEntities(Object storage) {
+        return false;
+    }
+
+    /**
      * Returns if the world is a custom ASWM world.
      *
      * @param world world instance

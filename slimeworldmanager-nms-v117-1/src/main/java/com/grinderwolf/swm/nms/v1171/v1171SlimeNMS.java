@@ -81,7 +81,6 @@ public class v1171SlimeNMS implements SlimeNMS {
 
         System.out.println("INJECTING: " + defaultWorld + " " + defaultNetherWorld + " " + defaultEndWorld);
 
-
         MinecraftServer server = MinecraftServer.getServer();
         server.server.scoreboardManager = new CraftScoreboardManager(server, server.getScoreboard());
 

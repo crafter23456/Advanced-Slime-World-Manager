@@ -8,6 +8,7 @@ import com.google.common.util.concurrent.*;
 import com.grinderwolf.swm.api.exceptions.*;
 import com.grinderwolf.swm.api.world.*;
 import com.grinderwolf.swm.api.world.properties.*;
+import com.grinderwolf.swm.nms.*;
 import com.mojang.serialization.*;
 import lombok.*;
 import net.minecraft.core.Registry;
@@ -104,11 +105,6 @@ public class CustomWorldServer extends ServerLevel {
             };
         }
 
-        // Load entities initially
-        this.entityManager.addLegacyChunkEntities(EntityType.loadEntitiesRecursive(world.getEntities()
-                .stream()
-                .map((tag) -> (net.minecraft.nbt.CompoundTag) Converter.convertTag(tag))
-                .collect(Collectors.toList()), this));
     }
 
     public static CompletableFuture<Integer> relight(net.minecraft.world.level.Level world, Collection<? extends LevelChunk> chunks) {
@@ -339,11 +335,10 @@ public class CustomWorldServer extends ServerLevel {
     }
 
     public CompletableFuture<ChunkEntities<Entity>> handleEntityLoad(EntityStorage storage, ChunkPos pos) {
-        List<CompoundTag> entities = slimeWorld.getEntityStorage().get(pos.longKey);
+        List<CompoundTag> entities = slimeWorld.getEntities().get(NmsUtil.asLong(pos.x, pos.z));
         if (entities == null) {
             entities = new ArrayList<>();
         }
-        System.out.println("LOADING ENTITIES IN: " + pos);
 
         return CompletableFuture.completedFuture(new ChunkEntities<>(pos, new ArrayList<>(
                 EntityType.loadEntitiesRecursive(entities
@@ -357,7 +352,9 @@ public class CustomWorldServer extends ServerLevel {
     }
 
     public void handleEntityUnLoad(EntityStorage storage, ChunkEntities<Entity> entities) {
+        ChunkPos pos = entities.getPos();
         List<CompoundTag> entitiesSerialized = new ArrayList<>();
+
         entities.getEntities().forEach((entity) -> {
             net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
             if (entity.save(tag)) {
@@ -365,11 +362,9 @@ public class CustomWorldServer extends ServerLevel {
             }
 
         });
-        System.out.println("SAVING ENTITIES IN: " + entities.getPos());
 
-        slimeWorld.getEntityStorage().put(entities.getPos().longKey, entitiesSerialized);
+        slimeWorld.getEntities().put(NmsUtil.asLong(pos.x, pos.z), entitiesSerialized);
     }
-
 
     @Override
     public void unload(LevelChunk chunk) {

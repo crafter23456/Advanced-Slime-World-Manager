@@ -51,7 +51,6 @@ public class CraftCLSMBridge implements CLSMBridge {
         return true;
     }
 
-
     @Override
     public Object loadEntities(Object storage, Object chunkCoords) {
         EntityStorage entityStorage = (EntityStorage) storage;

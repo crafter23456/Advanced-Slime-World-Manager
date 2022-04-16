@@ -47,7 +47,7 @@ public class ClassModifier {
         return customLoader.storeEntities(storage, entities);
     }
 
-    public static boolean flusheEntities(Object storage) {
+    public static boolean flushEntities(Object storage) {
         if (customLoader == null) {
             return false;
         }

@@ -293,7 +293,7 @@ public class v1182SlimeNMS implements SlimeNMS {
                         GameRules.Value<?> gameRuleValue = rules.getRule(gameRuleKeys.get(gameRule));
                         String theValue = compound.getString(gameRule);
                         gameRuleValue.deserialize(theValue);
-                        gameRuleValue.onChanged(mcServer);
+                        gameRuleValue.onChanged(null);
                     }
                 });
             });

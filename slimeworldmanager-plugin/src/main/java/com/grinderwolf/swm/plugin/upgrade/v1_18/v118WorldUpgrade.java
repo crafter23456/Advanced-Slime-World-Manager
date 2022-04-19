@@ -327,7 +327,7 @@ public class v118WorldUpgrade implements Upgrade {
         CompoundMap map = new CompoundMap();
         CompoundTag tag = new CompoundTag("", map);
 
-        map.put("palette", palette);
+        map.put(new ListTag<>("palette", TagType.TAG_COMPOUND, palette));
         if (blockStates != null) {
             map.put(new LongArrayTag("data", blockStates));
         }
